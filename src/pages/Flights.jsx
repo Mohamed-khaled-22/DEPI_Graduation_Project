@@ -3,6 +3,64 @@ import { useSearchParams } from 'react-router-dom';
 import { Plane, Search, RefreshCw, Clock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
+
+const normalizeFlightsData = (data) => {
+  if (Array.isArray(data)) {
+    const getFlightType = (flight) =>
+      String(
+        flight?.type ??
+        flight?.flight_type ??
+        flight?.flightType ??
+        flight?.direction ??
+        flight?.movement_type ??
+        flight?.movementType ??
+        ''
+      )
+        .trim()
+        .toLowerCase();
+
+    const departures = data.filter((flight) =>
+      ['departure', 'departures', 'departing', 'outbound'].includes(
+        getFlightType(flight)
+      )
+    );
+
+    const arrivals = data.filter((flight) =>
+      ['arrival', 'arrivals', 'arriving', 'inbound'].includes(
+        getFlightType(flight)
+      )
+    );
+
+    if (departures.length === 0 && arrivals.length === 0) {
+      console.warn(
+        'No flight type field was detected. All returned flights will be displayed under departures.'
+      );
+
+      return {
+        departures: data,
+        arrivals: []
+      };
+    }
+
+    return {
+      departures,
+      arrivals
+    };
+  }
+
+  if (data && typeof data === 'object') {
+    return {
+      departures: Array.isArray(data.departures) ? data.departures : [],
+      arrivals: Array.isArray(data.arrivals) ? data.arrivals : []
+    };
+  }
+
+  return {
+    departures: [],
+    arrivals: []
+  };
+};
+
 export default function Flights() {
   const { locale, t } = useLanguage();
   const [searchParams] = useSearchParams();
@@ -13,7 +71,7 @@ export default function Flights() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedAirlineCode, setSelectedAirlineCode] = useState('all');
-  
+
   // Dynamic API state variables
   const [flights, setFlights] = useState({ departures: [], arrivals: [] });
   const [weatherData, setWeatherData] = useState({});
@@ -27,8 +85,12 @@ export default function Flights() {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/flights`);
       if (response.ok) {
         const data = await response.json();
+        const normalizedData = normalizeFlightsData(data);
+
         console.log('Flights data loaded:', data);
-        return data;
+        console.log('Normalized flights data:', normalizedData);
+
+        return normalizedData;
       } else {
         console.error('Failed to load flights from database, HTTP status: ', response.status);
       }
@@ -42,8 +104,16 @@ export default function Flights() {
     const uniqueLocations = [];
     const locationKeys = new Set();
 
-    // Gather all departures and arrivals locations
-    const allFlights = [...flightList.departures, ...flightList.arrivals];
+    // Gather all departures and arrivals locations safely
+    const departures = Array.isArray(flightList?.departures)
+      ? flightList.departures
+      : [];
+
+    const arrivals = Array.isArray(flightList?.arrivals)
+      ? flightList.arrivals
+      : [];
+
+    const allFlights = [...departures, ...arrivals];
     allFlights.forEach(f => {
       if (f.lat && f.lon) {
         const key = `${f.lat},${f.lon}`;
@@ -65,7 +135,7 @@ export default function Flights() {
           if (data.current_weather) {
             const temp = Math.round(data.current_weather.temperature);
             const wCode = data.current_weather.weathercode;
-            
+
             // Map weather codes to labels and emojis
             let icon = '☀️';
             let descAr = 'مشمس';
@@ -157,10 +227,13 @@ export default function Flights() {
       setHasError(true);
     }
     setIsRefreshing(false);
-setSearchQuery("")
+    setSearchQuery('');
   };
 
-  const currentFlights = activeTab === 'departures' ? flights.departures : flights.arrivals;
+  const currentFlights =
+    activeTab === 'departures'
+      ? (Array.isArray(flights?.departures) ? flights.departures : [])
+      : (Array.isArray(flights?.arrivals) ? flights.arrivals : []);
 
   // Calculate live statistics
   const totalCount = currentFlights.length;
@@ -171,21 +244,21 @@ setSearchQuery("")
   const filteredFlights = currentFlights.filter((flight) => {
     const term = searchQuery.toLowerCase();
 
-const airline = isRtl ? flight.airline_ar : flight.airline_en;
+    const airline = isRtl ? flight.airline_ar : flight.airline_en;
 
-const location =
-  activeTab === "departures"
-    ? (isRtl ? flight.destination_ar : flight.destination_en)
-    : (isRtl ? flight.origin_ar : flight.origin_en);
+    const location =
+      activeTab === "departures"
+        ? (isRtl ? flight.destination_ar : flight.destination_en)
+        : (isRtl ? flight.origin_ar : flight.origin_en);
 
-const matchesSearch =
-  (flight.flight_no || "").toLowerCase().includes(term) ||
-  (airline || "").toLowerCase().includes(term) ||
-  (location || "").toLowerCase().includes(term);
+    const matchesSearch =
+      (flight.flight_no || "").toLowerCase().includes(term) ||
+      (airline || "").toLowerCase().includes(term) ||
+      (location || "").toLowerCase().includes(term);
 
-const matchesAirline =
-  selectedAirlineCode === "all" ||
-  (flight.flight_no || "").startsWith(selectedAirlineCode);
+    const matchesAirline =
+      selectedAirlineCode === "all" ||
+      (flight.flight_no || "").startsWith(selectedAirlineCode);
 
     return matchesSearch && matchesAirline;
   });
@@ -221,7 +294,7 @@ const matchesAirline =
             <strong style={{ fontSize: '26px', color: 'var(--status-ontime)', fontFamily: 'Inter' }}>{onTimeCount}</strong>
           </div>
           <span style={{ fontSize: '13px', color: 'var(--status-ontime)', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '20px', fontWeight: 'bold' }}>
-            {totalCount ? Math.round((onTimeCount/totalCount)*100) : 100}%
+            {totalCount ? Math.round((onTimeCount / totalCount) * 100) : 100}%
           </span>
         </div>
         <div className="glass-card" style={{ padding: '20px', borderLeft: isRtl ? 'none' : '4px solid var(--status-delayed)', borderRight: isRtl ? '4px solid var(--status-delayed)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -230,7 +303,7 @@ const matchesAirline =
             <strong style={{ fontSize: '26px', color: 'var(--status-delayed)', fontFamily: 'Inter' }}>{delayedCount}</strong>
           </div>
           <span style={{ fontSize: '12px', color: 'var(--status-delayed)', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '20px', fontWeight: 'bold' }}>
-            {totalCount ? Math.round((delayedCount/totalCount)*100) : 0}%
+            {totalCount ? Math.round((delayedCount / totalCount) * 100) : 0}%
           </span>
         </div>
         <div className="glass-card" style={{ padding: '20px', borderLeft: isRtl ? 'none' : '4px solid var(--status-boarding)', borderRight: isRtl ? '4px solid var(--status-boarding)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -245,14 +318,14 @@ const matchesAirline =
       {/* Tabs and Refresh Bar */}
       <div className="flights-header" style={{ marginBottom: '15px' }}>
         <div className="flights-tabs">
-          <button 
+          <button
             className={`flights-tab-btn ${activeTab === 'departures' ? 'active' : ''}`}
             onClick={() => { setActiveTab('departures'); setSearchQuery(''); setSelectedAirlineCode('all'); }}
           >
             <Plane size={18} style={{ transform: isRtl ? 'rotate(-45deg)' : 'rotate(45deg)' }} />
             {t('flights.departures')}
           </button>
-          <button 
+          <button
             className={`flights-tab-btn ${activeTab === 'arrivals' ? 'active' : ''}`}
             onClick={() => { setActiveTab('arrivals'); setSearchQuery(''); setSelectedAirlineCode('all'); }}
           >
@@ -263,33 +336,33 @@ const matchesAirline =
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '500px' }}>
           <div className="search-filter-bar" style={{ position: 'relative', width: '100%' }}>
-            <input 
-              type="text" 
-              className="form-control" 
-              placeholder={t('flights.searchPlaceholder')} 
+            <input
+              type="text"
+              className="form-control"
+              placeholder={t('flights.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ 
-                paddingRight: isRtl ? '40px' : '16px', 
+              style={{
+                paddingRight: isRtl ? '40px' : '16px',
                 paddingLeft: isRtl ? '16px' : '40px',
                 textAlign: isRtl ? 'right' : 'left'
               }}
             />
-            <Search 
-              size={18} 
-              style={{ 
-                position: 'absolute', 
-                right: isRtl ? '14px' : 'auto', 
-                left: isRtl ? 'auto' : '14px', 
-                top: '15px', 
-                color: 'var(--text-muted)' 
-              }} 
+            <Search
+              size={18}
+              style={{
+                position: 'absolute',
+                right: isRtl ? '14px' : 'auto',
+                left: isRtl ? 'auto' : '14px',
+                top: '15px',
+                color: 'var(--text-muted)'
+              }}
             />
           </div>
 
-          <button 
-            onClick={handleRefresh} 
-            className="btn-secondary" 
+          <button
+            onClick={handleRefresh}
+            className="btn-secondary"
             style={{ padding: '12px', height: '48px' }}
             title="Refresh"
             disabled={isRefreshing}
@@ -369,64 +442,64 @@ const matchesAirline =
                     const weather = weatherData[weatherKey];
 
                     return (
-                    <tr key={flight.id}>
-  <td style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-    <Clock size={16} style={{ color: 'var(--text-muted)' }} />
-    <span style={{ fontFamily: 'Inter' }}>{flight.time}</span>
-  </td>
+                      <tr key={flight.id}>
+                        <td style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                          <Clock size={16} style={{ color: 'var(--text-muted)' }} />
+                          <span style={{ fontFamily: 'Inter' }}>{flight.time}</span>
+                        </td>
 
-  <td style={{ fontFamily: 'Inter', fontWeight: 'bold', color: 'var(--primary)' }}>
-    {flight.flight_no}
-  </td>
+                        <td style={{ fontFamily: 'Inter', fontWeight: 'bold', color: 'var(--primary)' }}>
+                          {flight.flight_no}
+                        </td>
 
-  <td>
-    {isRtl ? flight.airline_ar : flight.airline_en}
-  </td>
+                        <td>
+                          {isRtl ? flight.airline_ar : flight.airline_en}
+                        </td>
 
-  <td style={{ fontWeight: '500' }}>
-    <span style={{ verticalAlign: 'middle' }}>
-      {activeTab === 'departures'
-        ? (isRtl ? flight.destination_ar : flight.destination_en)
-        : (isRtl ? flight.origin_ar : flight.origin_en)}
-    </span>
+                        <td style={{ fontWeight: '500' }}>
+                          <span style={{ verticalAlign: 'middle' }}>
+                            {activeTab === 'departures'
+                              ? (isRtl ? flight.destination_ar : flight.destination_en)
+                              : (isRtl ? flight.origin_ar : flight.origin_en)}
+                          </span>
 
-    {weather && (
-      <span
-        className="weather-badge"
-        title={`${t('flights.weather')}: ${weather.desc}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          fontSize: '12px',
-          color: 'var(--accent)',
-          marginLeft: isRtl ? '0' : '8px',
-          marginRight: isRtl ? '8px' : '0',
-          background: 'rgba(245,158,11,.08)',
-          padding: '2px 8px',
-          borderRadius: '12px',
-          border: '1px solid rgba(245,158,11,.15)',
-          verticalAlign: 'middle'
-        }}
-      >
-        <span>{weather.icon}</span>
-        <span style={{ fontFamily: 'Inter', fontWeight: '700' }}>
-          {weather.temp}°C
-        </span>
-      </span>
-    )}
-  </td>
+                          {weather && (
+                            <span
+                              className="weather-badge"
+                              title={`${t('flights.weather')}: ${weather.desc}`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '12px',
+                                color: 'var(--accent)',
+                                marginLeft: isRtl ? '0' : '8px',
+                                marginRight: isRtl ? '8px' : '0',
+                                background: 'rgba(245,158,11,.08)',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                border: '1px solid rgba(245,158,11,.15)',
+                                verticalAlign: 'middle'
+                              }}
+                            >
+                              <span>{weather.icon}</span>
+                              <span style={{ fontFamily: 'Inter', fontWeight: '700' }}>
+                                {weather.temp}°C
+                              </span>
+                            </span>
+                          )}
+                        </td>
 
-  <td style={{ fontFamily: 'Inter' }}>
-    {flight.gate}
-  </td>
+                        <td style={{ fontFamily: 'Inter' }}>
+                          {flight.gate}
+                        </td>
 
-  <td>
-    <span className={`flight-status ${flight.status}`}>
-      {isRtl ? flight.status_label_ar : flight.status_label_en}
-    </span>
-  </td>
-</tr>
+                        <td>
+                          <span className={`flight-status ${flight.status}`}>
+                            {isRtl ? flight.status_label_ar : flight.status_label_en}
+                          </span>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
