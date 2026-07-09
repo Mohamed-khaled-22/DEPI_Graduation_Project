@@ -5,6 +5,20 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
+// Flight pricing structure (same as in BookingContext)
+const FLIGHT_PRICING = {
+  basePrices: {
+    economy: 500,
+    business: 1500,
+    first: 3000
+  },
+  baggagePrice: 100,
+  routeMultipliers: {
+    domestic: 1.0,
+    international: 1.5
+  }
+};
+
 export default function Booking() {
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
@@ -40,6 +54,9 @@ export default function Booking() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
   const [showConflictPopup, setShowConflictPopup] = useState(false);
+
+  // Calculate estimated price for display
+  const estimatedPrice = formData.to ? calculateFlightPrice(formData.cabinClass, formData.baggageCount, formData.from, formData.to, formData.passengers) : 0;
 
   const airports = [
     { code: 'RUH', nameAr: 'الرياض', nameEn: 'Riyadh' },
@@ -101,10 +118,21 @@ export default function Booking() {
     setIsSubmitting(true);
 
     try {
-      // Check for existing bookings on the same date
+      // Check for existing bookings within the first week of departure date
       const userBookings = getUserBookings(formData.email);
+      const departureDate = new Date(formData.departureDate);
+      const weekBefore = new Date(departureDate);
+      weekBefore.setDate(weekBefore.getDate() - 7);
+      const weekAfter = new Date(departureDate);
+      weekAfter.setDate(weekAfter.getDate() + 7);
+
       const hasConflict = userBookings.some(
-        booking => booking.departureDate === formData.departureDate && booking.status !== 'cancelled'
+        booking => {
+          const bookingDate = new Date(booking.departureDate);
+          return bookingDate >= weekBefore && 
+                 bookingDate <= weekAfter && 
+                 booking.status !== 'cancelled';
+        }
       );
 
       if (hasConflict) {
@@ -114,7 +142,7 @@ export default function Booking() {
       }
 
       // Calculate total price
-      const price = calculateFlightPrice(formData.cabinClass, formData.baggageCount, formData.from, formData.to);
+      const price = calculateFlightPrice(formData.cabinClass, formData.baggageCount, formData.from, formData.to, formData.passengers);
       
       // Prepare booking data
       const fromAirport = airports.find(a => a.code === formData.from);
@@ -500,6 +528,63 @@ export default function Booking() {
             </div>
           </div>
 
+          {/* Price Summary */}
+          {formData.to && (
+            <div style={{
+              background: 'rgba(14, 165, 233, 0.1)',
+              border: '1px solid rgba(14, 165, 233, 0.2)',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '25px'
+            }}>
+              <h3 style={{ fontSize: '16px', color: 'var(--text-heading)', marginBottom: '15px' }}>
+                {isRtl ? 'ملخص السعر' : 'Price Summary'}
+              </h3>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {isRtl ? 'السعر الأساسي' : 'Base Price'}
+                  </span>
+                  <span style={{ fontFamily: 'Inter' }}>
+                    {FLIGHT_PRICING.basePrices[formData.cabinClass]} {isRtl ? 'ر.س' : 'SAR'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {isRtl ? 'الحقائق الإضافية' : 'Extra Baggage'}
+                  </span>
+                  <span style={{ fontFamily: 'Inter' }}>
+                    {formData.baggageCount * FLIGHT_PRICING.baggagePrice} {isRtl ? 'ر.س' : 'SAR'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {isRtl ? 'عدد المسافرين' : 'Passengers'}
+                  </span>
+                  <span style={{ fontFamily: 'Inter' }}>
+                    x{formData.passengers}
+                  </span>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  borderTop: '1px solid var(--border-color)', 
+                  paddingTop: '12px', 
+                  marginTop: '8px',
+                  fontSize: '16px',
+                  fontWeight: 'bold'
+                }}>
+                  <span style={{ color: 'var(--text-heading)' }}>
+                    {isRtl ? 'الإجمالي المقدر' : 'Estimated Total'}
+                  </span>
+                  <span style={{ color: 'var(--primary)', fontFamily: 'Inter', fontSize: '18px' }}>
+                    {estimatedPrice} {isRtl ? 'ر.س' : 'SAR'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn-primary" 
@@ -559,7 +644,7 @@ export default function Booking() {
             </div>
             
             <p style={{ color: 'var(--text-muted)', marginBottom: '25px', lineHeight: '1.6' }}>
-              {isRtl ? 'لديك رحلة أخرى محجوزة في نفس الموعد. يرجى اختيار تاريخ آخر.' : 'You already have another flight booked at the same time. Please choose a different date.'}
+              {isRtl ? 'لديك رحلة أخرى محجوزة خلال أول أسبوع من هذا التاريخ. يرجى اختيار تاريخ آخر.' : 'You already have another flight booked within the first week of this date. Please choose a different date.'}
             </p>
             
             <button

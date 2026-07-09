@@ -4,6 +4,7 @@ import { CreditCard, Calendar, Lock, CheckCircle, ArrowLeft, ShieldCheck, AlertC
 import { useLanguage } from '../context/LanguageContext';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Payment() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function Payment() {
   const { locale, t } = useLanguage();
   const { createBooking } = useBooking();
   const { currentUser } = useAuth();
+  const { theme } = useTheme();
   const isRtl = locale === 'ar';
 
   const bookingData = location.state?.bookingData;
@@ -146,7 +148,7 @@ export default function Payment() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '40px 20px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-main)', padding: '40px 20px' }}>
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '30px' }}>
@@ -180,7 +182,7 @@ export default function Payment() {
           <>
             {/* Order Summary */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
+              background: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
               borderRadius: '12px',
               padding: '20px',
@@ -219,7 +221,7 @@ export default function Payment() {
 
             {/* Payment Form */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
+              background: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
               borderRadius: '12px',
               padding: '24px',
@@ -248,7 +250,7 @@ export default function Payment() {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      background: 'var(--bg-input)',
                       border: errors.cardNumber ? '1px solid #ef4444' : '1px solid var(--border-color)',
                       borderRadius: '8px',
                       color: 'var(--text-main)',
@@ -278,7 +280,7 @@ export default function Payment() {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      background: 'var(--bg-input)',
                       border: errors.cardName ? '1px solid #ef4444' : '1px solid var(--border-color)',
                       borderRadius: '8px',
                       color: 'var(--text-main)',
@@ -310,7 +312,7 @@ export default function Payment() {
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'var(--bg-input)',
                         border: errors.expiryDate ? '1px solid #ef4444' : '1px solid var(--border-color)',
                         borderRadius: '8px',
                         color: 'var(--text-main)',
@@ -340,7 +342,7 @@ export default function Payment() {
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'var(--bg-input)',
                         border: errors.cvv ? '1px solid #ef4444' : '1px solid var(--border-color)',
                         borderRadius: '8px',
                         color: 'var(--text-main)',

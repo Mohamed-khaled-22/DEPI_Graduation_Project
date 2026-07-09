@@ -18,7 +18,7 @@ const FLIGHT_PRICING = {
 };
 
 // Calculate flight price
-const calculateFlightPrice = (cabinClass, baggageCount, from, to) => {
+const calculateFlightPrice = (cabinClass, baggageCount, from, to, passengers = 1) => {
   const basePrice = FLIGHT_PRICING.basePrices[cabinClass] || FLIGHT_PRICING.basePrices.economy;
   const baggageCost = (baggageCount || 0) * FLIGHT_PRICING.baggagePrice;
   
@@ -26,7 +26,7 @@ const calculateFlightPrice = (cabinClass, baggageCount, from, to) => {
   const isInternational = ['LHR', 'CDG', 'IST', 'NYC', 'CAI'].includes(from) || ['LHR', 'CDG', 'IST', 'NYC', 'CAI'].includes(to);
   const routeMultiplier = isInternational ? FLIGHT_PRICING.routeMultipliers.international : FLIGHT_PRICING.routeMultipliers.domestic;
   
-  const total = (basePrice + baggageCost) * routeMultiplier;
+  const total = (basePrice + baggageCost) * routeMultiplier * passengers;
   return Math.round(total);
 };
 
