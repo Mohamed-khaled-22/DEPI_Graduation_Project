@@ -58,6 +58,10 @@ export default function Booking() {
   // Calculate estimated price for display
   const estimatedPrice = formData.to ? calculateFlightPrice(formData.cabinClass, formData.baggageCount, formData.from, formData.to, formData.passengers) : 0;
 
+  // Determine if international route
+  const isInternational = ['LHR', 'CDG', 'IST', 'NYC', 'CAI'].includes(formData.from) || ['LHR', 'CDG', 'IST', 'NYC', 'CAI'].includes(formData.to);
+  const routeMultiplier = isInternational ? FLIGHT_PRICING.routeMultipliers.international : FLIGHT_PRICING.routeMultipliers.domestic;
+
   const airports = [
     { code: 'RUH', nameAr: 'الرياض', nameEn: 'Riyadh' },
     { code: 'JED', nameAr: 'جدة', nameEn: 'Jeddah' },
@@ -555,6 +559,14 @@ export default function Booking() {
                   </span>
                   <span style={{ fontFamily: 'Inter' }}>
                     {formData.baggageCount * FLIGHT_PRICING.baggagePrice} {isRtl ? 'ر.س' : 'SAR'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {isRtl ? 'نوع المسار' : 'Route Type'}
+                  </span>
+                  <span style={{ fontFamily: 'Inter' }}>
+                    {isInternational ? (isRtl ? 'دولي (×1.5)' : 'International (×1.5)') : (isRtl ? 'محلي (×1.0)' : 'Domestic (×1.0)')}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
