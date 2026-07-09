@@ -24,7 +24,7 @@ export default function Flights() {
 
   const loadFlightsData = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/flights');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/flights`);
       if (response.ok) {
         const data = await response.json();
         console.log('Flights data loaded:', data);

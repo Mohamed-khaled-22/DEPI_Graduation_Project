@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award, Clock, MapPin, Coffee, ShoppingBag, ShieldCheck, Zap, Car, Sparkles, X, Check, Utensils, QrCode, Download, Plane } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import jsPDF from 'jspdf';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api`;
 
 // Service pricing structure
 const SERVICE_PRICING = {
@@ -76,16 +76,16 @@ export default function Services() {
       navigate('/login');
       return;
     }
-    
+
     // Load user flights
     const flights = getUserBookings(currentUser.email).filter(b => b.status !== 'cancelled');
     setUserFlights(flights);
-    
+
     setModalType(type);
     setBookingConfirmed(false);
     setBookingData(null);
     setError('');
-    
+
     // If user has one flight, auto-select and pre-fill form
     if (flights.length === 1) {
       const flight = flights[0];
@@ -105,7 +105,7 @@ export default function Services() {
       setSelectedFlight(null);
       setBookingForm({ name: '', flightNo: '', date: new Date().toISOString().split('T')[0], details: '1' });
     }
-    
+
     setModalOpen(true);
   };
 
@@ -117,7 +117,7 @@ export default function Services() {
     try {
       // Get token from localStorage (assuming it's stored there after login)
       const token = localStorage.getItem('auth_token');
-      
+
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -205,7 +205,7 @@ export default function Services() {
       y += lineHeight;
       doc.text(`Passenger Name: ${booking.passenger_name}`, 20, y);
       y += lineHeight;
-      
+
       const serviceNames = {
         lounge: 'VIP Lounge',
         limo: 'Luxury Limousine',
@@ -288,14 +288,14 @@ export default function Services() {
       )}
 
       <div className="services-categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>
-        
+
         {/* VIP Lounge */}
         <div className="glass-card service-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
           <div>
-            <img 
-              src="./images/lounge.png" 
-              alt={t('services.loungeTitle')} 
-              className="service-image" 
+            <img
+              src="./images/lounge.png"
+              alt={t('services.loungeTitle')}
+              className="service-image"
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <Award style={{ color: 'var(--primary)' }} size={22} />
@@ -325,10 +325,10 @@ export default function Services() {
         {/* Dining & Cafes */}
         <div className="glass-card service-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
           <div>
-            <img 
-              src="./images/dining.png" 
-              alt={t('services.diningTitle')} 
-              className="service-image" 
+            <img
+              src="./images/dining.png"
+              alt={t('services.diningTitle')}
+              className="service-image"
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <Coffee style={{ color: 'var(--primary)' }} size={22} />
@@ -421,8 +421,8 @@ export default function Services() {
               <h3>{isRtl ? 'المرور السريع الذكي (FastTrack)' : 'Smart FastTrack VIP'}</h3>
             </div>
             <p>
-              {isRtl 
-                ? 'تخطَ الطوابير في فحص الجوازات والأمن النهائي عبر مسارات المرور السريع المخصصة. تجربة مغادرة سلسة دون أي تأخير في ثوانٍ معدودة.' 
+              {isRtl
+                ? 'تخطَ الطوابير في فحص الجوازات والأمن النهائي عبر مسارات المرور السريع المخصصة. تجربة مغادرة سلسة دون أي تأخير في ثوانٍ معدودة.'
                 : 'Skip passport and terminal security queues via dedicated FastTrack lanes. Experience immediate screening and fast boarding in seconds.'}
             </p>
             <div className="service-features" style={{ marginTop: '15px' }}>
@@ -467,8 +467,8 @@ export default function Services() {
               <h3>{isRtl ? 'ليموزين التنقل الفاخر' : 'Luxury Limousine Transfer'}</h3>
             </div>
             <p>
-              {isRtl 
-                ? 'رحلتك الراقية لا تنتهي في المطار. احجز سيارة ليموزين فاخرة بسائق خاص من صالة الوصول لتوصلك إلى باب فندقك أو منزلك بأعلى درجات الرفاهية.' 
+              {isRtl
+                ? 'رحلتك الراقية لا تنتهي في المطار. احجز سيارة ليموزين فاخرة بسائق خاص من صالة الوصول لتوصلك إلى باب فندقك أو منزلك بأعلى درجات الرفاهية.'
                 : 'Your premium journey continues outside the airport. Reserve a luxury private chauffeur drive from arrivals direct to your hotel.'}
             </p>
             <div className="service-features" style={{ marginTop: '15px' }}>
@@ -630,11 +630,11 @@ export default function Services() {
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button 
-                      className="btn-secondary" 
+                    <button
+                      className="btn-secondary"
                       onClick={generatePDFReceipt}
-                      style={{ 
-                        flex: 1, 
+                      style={{
+                        flex: 1,
                         justifyContent: 'center',
                         border: '1px solid var(--primary)',
                         color: 'var(--primary)'
@@ -643,9 +643,9 @@ export default function Services() {
                       <Download size={16} />
                       <span>{isRtl ? 'حفظ الإيصال PDF' : 'Save Receipt PDF'}</span>
                     </button>
-                    <button 
-                      className="btn-primary" 
-                      onClick={() => setModalOpen(false)} 
+                    <button
+                      className="btn-primary"
+                      onClick={() => setModalOpen(false)}
                       style={{ flex: 1, justifyContent: 'center' }}
                     >
                       {isRtl ? 'إغلاق' : 'Close'}
@@ -700,38 +700,38 @@ export default function Services() {
 
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'الاسم الكامل للمسافر' : 'Passenger Full Name'}</label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          placeholder={isRtl ? 'مثال: أحمد علي' : 'e.g. Ahmad Ali'} 
-                          value={bookingForm.name} 
-                          onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} 
-                          required 
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={isRtl ? 'مثال: أحمد علي' : 'e.g. Ahmad Ali'}
+                          value={bookingForm.name}
+                          onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
+                          required
                           style={{ textAlign: isRtl ? 'right' : 'left' }}
                         />
                       </div>
-                      
+
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'رقم رحلتك المعتمد' : 'Flight Number'}</label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          placeholder="e.g. QA-301" 
-                          value={bookingForm.flightNo} 
-                          onChange={(e) => setBookingForm({ ...bookingForm, flightNo: e.target.value })} 
-                          required 
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. QA-301"
+                          value={bookingForm.flightNo}
+                          onChange={(e) => setBookingForm({ ...bookingForm, flightNo: e.target.value })}
+                          required
                           style={{ textAlign: isRtl ? 'right' : 'left', textTransform: 'uppercase' }}
                         />
                       </div>
 
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'تاريخ السفر' : 'Travel Date'}</label>
-                        <input 
-                          type="date" 
-                          className="form-control" 
-                          value={bookingForm.date} 
-                          onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} 
-                          required 
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={bookingForm.date}
+                          onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
+                          required
                           style={{ textAlign: isRtl ? 'right' : 'left' }}
                         />
                       </div>
@@ -739,9 +739,9 @@ export default function Services() {
                       {modalType === 'lounge' && (
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'عدد الضيوف والمرافقين' : 'Number of Guests'}</label>
-                          <select 
-                            className="form-control" 
-                            value={bookingForm.details} 
+                          <select
+                            className="form-control"
+                            value={bookingForm.details}
                             onChange={(e) => setBookingForm({ ...bookingForm, details: e.target.value })}
                             style={{ textAlign: isRtl ? 'right' : 'left' }}
                           >
@@ -756,13 +756,13 @@ export default function Services() {
                       {modalType === 'limo' && (
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'وجهة التوصيل المطلوبة بالرياض' : 'Destination Address'}</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            placeholder={isRtl ? 'مثال: فندق الفرسان، حي الملقا' : 'e.g. Ritz Carlton Hotel'} 
-                            value={bookingForm.details} 
-                            onChange={(e) => setBookingForm({ ...bookingForm, details: e.target.value })} 
-                            required 
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder={isRtl ? 'مثال: فندق الفرسان، حي الملقا' : 'e.g. Ritz Carlton Hotel'}
+                            value={bookingForm.details}
+                            onChange={(e) => setBookingForm({ ...bookingForm, details: e.target.value })}
+                            required
                             style={{ textAlign: isRtl ? 'right' : 'left' }}
                           />
                         </div>
@@ -810,8 +810,8 @@ export default function Services() {
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {dutyFreeItems.map(item => (
-                          <div 
-                            key={item.id} 
+                          <div
+                            key={item.id}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -829,9 +829,9 @@ export default function Services() {
                                 <strong style={{ color: 'var(--primary)', fontSize: '13px', fontFamily: 'Inter' }}>{item.price} {isRtl ? 'ر.س' : 'SAR'}</strong>
                               </div>
                             </div>
-                            <button 
+                            <button
                               onClick={() => handleAddToCart(item)}
-                              className="btn-primary" 
+                              className="btn-primary"
                               style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '20px' }}
                             >
                               {isRtl ? 'طلب مسبق +' : 'Pre-Order +'}
@@ -850,7 +850,7 @@ export default function Services() {
                           </div>
                           <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '8px', padding: '10px' }}>
                             {cart.map((cItem, i) => (
-                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '4px 0', borderBottom: i === cart.length-1 ? 'none' : '1px solid rgba(255,255,255,0.03)' }}>
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '4px 0', borderBottom: i === cart.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.03)' }}>
                                 <span>{isRtl ? cItem.nameAr : cItem.nameEn}</span>
                                 <strong style={{ fontFamily: 'Inter' }}>{cItem.price} {isRtl ? 'ر.س' : 'SAR'}</strong>
                               </div>
