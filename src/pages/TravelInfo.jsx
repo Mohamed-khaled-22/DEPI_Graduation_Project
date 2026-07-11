@@ -112,7 +112,9 @@ export default function TravelInfo() {
                     background: ' url("data:image/svg+xml;utf8,<svg fill=\'%2394a3b8\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>") no-repeat left 10px center',
                     paddingLeft: isRtl ? '16px' : '30px',
                     paddingRight: isRtl ? '30px' : '16px',
-                    textAlign: isRtl ? 'right' : 'left'
+                    textAlign: isRtl ? 'right' : 'left',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-main)'
                   }}
                 >
                   <option value="economy">{t('travelInfo.classEconomy')}</option>
@@ -258,7 +260,9 @@ export default function TravelInfo() {
                   background: ' url("data:image/svg+xml;utf8,<svg fill=\'%2394a3b8\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>") no-repeat left 10px center',
                   paddingLeft: isRtl ? '16px' : '30px',
                   paddingRight: isRtl ? '30px' : '16px',
-                  textAlign: isRtl ? 'right' : 'left'
+                  textAlign: isRtl ? 'right' : 'left',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-main)'
                 }}
               >
                 <option value="uk">{isRtl ? 'المملكة المتحدة (UK)' : 'United Kingdom'}</option>

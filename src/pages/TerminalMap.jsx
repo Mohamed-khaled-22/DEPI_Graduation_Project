@@ -147,7 +147,7 @@ export default function TerminalMap() {
             border: finderSuccess ? '1px solid var(--status-ontime)' : '1px solid var(--status-delayed)',
             borderRadius: '8px',
             fontSize: '13.5px',
-            color: finderSuccess ? '#fff' : 'var(--text-main)',
+            color: 'var(--text-main)',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
