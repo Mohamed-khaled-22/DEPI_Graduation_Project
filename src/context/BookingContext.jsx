@@ -138,8 +138,10 @@ export function BookingProvider({ children }) {
   };
 
   const findGateByFlight = (flightNumber) => {
+    if (!flightNumber) return null;
+    const searchQuery = flightNumber.toString().trim().toUpperCase();
     return AIRPORT_GATES.flightGateMapping.find(
-      f => f.flight.toLowerCase() === flightNumber.toLowerCase()
+      f => f.flight.toUpperCase() === searchQuery
     );
   };
 

@@ -5,7 +5,7 @@ import { useBooking } from '../context/BookingContext';
 
 export default function TerminalMap() {
   const { locale, t } = useLanguage();
-  const { getTerminalGates, getTerminalInfo, findGateByFlight, getGateInfo } = useBooking();
+  const { getTerminalGates, getTerminalInfo, getGateInfo } = useBooking();
   const [activeTerminal, setActiveTerminal] = useState('t1');
   const [selectedGate, setSelectedGate] = useState(null);
 
@@ -13,6 +13,16 @@ export default function TerminalMap() {
   const [flightSearchQuery, setFlightSearchQuery] = useState('');
   const [finderMessage, setFinderMessage] = useState('');
   const [finderSuccess, setFinderSuccess] = useState(false);
+
+  // Direct flight to gate mapping (fallback)
+  const FLIGHT_GATE_MAPPING = [
+    { flight: 'QA-301', terminal: 't1', gate: 'A3', destAr: 'لندن', destEn: 'London' },
+    { flight: 'QA-302', terminal: 't1', gate: 'A5', destAr: 'الرياض', destEn: 'Riyadh' },
+    { flight: 'QA-110', terminal: 't1', gate: 'A1', destAr: 'القاهرة', destEn: 'Cairo' },
+    { flight: 'EK-812', terminal: 't1', gate: 'A8', destAr: 'دبي', destEn: 'Dubai' },
+    { flight: 'SV-500', terminal: 't2', gate: 'B2', destAr: 'جدة', destEn: 'Jeddah' },
+    { flight: 'QA-225', terminal: 't2', gate: 'B4', destAr: 'باريس', destEn: 'Paris' }
+  ];
 
   const gates = getTerminalGates(activeTerminal);
   const terminalInfo = getTerminalInfo(activeTerminal);
@@ -63,9 +73,10 @@ export default function TerminalMap() {
     setFinderMessage('');
     setFinderSuccess(false);
 
-    if (!flightSearchQuery.trim()) return;
+    const searchQuery = flightSearchQuery.trim().toUpperCase();
+    if (!searchQuery) return;
 
-    const found = findGateByFlight(flightSearchQuery.trim());
+    const found = FLIGHT_GATE_MAPPING.find(f => f.flight.toUpperCase() === searchQuery);
 
     if (found) {
       setActiveTerminal(found.terminal);
