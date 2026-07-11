@@ -115,7 +115,7 @@ export default function Home() {
           <h1 style={{ fontSize: '38px', lineHeight: '1.25', fontWeight: '800' }}>{t('home.welcome')}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '16px', maxWidth: '580px', lineHeight: '1.6' }}>{t('home.subtitle')}</p>
           
-          <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }} className='booking-btns-container'>
             <button className="btn-primary" onClick={() => navigate('/booking')}>
               <Plane size={18} />
               {isRtl ? 'احجز رحلتك الآن' : 'Book Your Trip Now'}
@@ -129,7 +129,7 @@ export default function Home() {
 
       {/* Flight Search Widget */}
       <section className="search-widget" style={{ marginTop: '-60px' }}>
-        <div className="glass-card" style={{ boxShadow: 'var(--shadow-lg)' }}>
+        <div className="glass-card glass-crd-first " style={{ boxShadow: 'var(--shadow-lg)' }}>
           <div className="search-tabs" style={{ flexDirection: isRtl ? 'row' : 'row' }}>
             <button 
               className={`search-tab-btn ${searchType === 'departures' ? 'active' : ''}`}

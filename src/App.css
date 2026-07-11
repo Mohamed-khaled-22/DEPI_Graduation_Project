@@ -872,12 +872,25 @@ footer {
   }
 
   .hero-section {
-    height: 350px;
+    height: 65vh;
+  }
+  .booking-btns-container{
+    flex-direction: column;
+    align-items: center;
   }
 
   .hero-content h1 {
     font-size: 32px;
   }
+
+
+  .glass-crd-first {
+
+    position: relative; 
+    top: 35px; 
+
+  }
+
 
   .boarding-pass-card::after {
     display: none;

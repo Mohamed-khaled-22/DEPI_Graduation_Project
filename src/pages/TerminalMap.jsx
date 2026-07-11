@@ -5,7 +5,7 @@ import { useBooking } from '../context/BookingContext';
 
 export default function TerminalMap() {
   const { locale, t } = useLanguage();
-  const { getTerminalGates, getTerminalInfo, findGateByFlight } = useBooking();
+  const { getTerminalGates, getTerminalInfo, findGateByFlight, getGateInfo } = useBooking();
   const [activeTerminal, setActiveTerminal] = useState('t1');
   const [selectedGate, setSelectedGate] = useState(null);
 
@@ -17,6 +17,39 @@ export default function TerminalMap() {
   const gates = getTerminalGates(activeTerminal);
   const terminalInfo = getTerminalInfo(activeTerminal);
   const isRtl = locale === 'ar';
+
+  // Service name translations
+  const getServiceNameAr = (service) => {
+    const serviceNames = {
+      'duty-free': 'السوق الحرة',
+      'lounge': 'صالة الانتظار',
+      'cafe': 'مقهى',
+      'restroom': 'دورات المياه',
+      'restaurant': 'مطعم',
+      'prayer-room': 'غرفة الصلاة',
+      'spa': 'سبا',
+      'kids-zone': 'منطقة الأطفال',
+      'charging-station': 'محطة الشحن',
+      'vending-machine': 'آلة البيع'
+    };
+    return serviceNames[service] || service;
+  };
+
+  const getServiceNameEn = (service) => {
+    const serviceNames = {
+      'duty-free': 'Duty Free',
+      'lounge': 'Lounge',
+      'cafe': 'Cafe',
+      'restroom': 'Restroom',
+      'restaurant': 'Restaurant',
+      'prayer-room': 'Prayer Room',
+      'spa': 'Spa',
+      'kids-zone': 'Kids Zone',
+      'charging-station': 'Charging Station',
+      'vending-machine': 'Vending Machine'
+    };
+    return serviceNames[service] || service;
+  };
 
   const steps = [
     { num: 1, title: t('map.step1Title'), desc: t('map.step1Desc') },
@@ -166,64 +199,98 @@ export default function TerminalMap() {
             ))}
           </div>
 
-          {selectedGate && (
-            <div style={{
-              marginTop: '25px',
-              padding: '18px',
-              background: 'rgba(14, 165, 233, 0.15)',
-              border: '1px solid var(--primary)',
-              borderRadius: '8px',
-              width: '100%',
-              textAlign: isRtl ? 'right' : 'left',
-              animation: 'fadeInUp 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ color: 'var(--text-heading)', fontSize: '15px' }}>
-                  {t('map.selectedGate')}: {selectedGate}
-                </strong>
-
-                {/* Walk Time details */}
-                <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12.5px',
-                  color: 'var(--accent)',
-                  fontWeight: 'bold',
-                  background: 'rgba(245, 158, 11, 0.1)',
-                  padding: '4px 10px',
-                  borderRadius: '15px'
-                }}>
-                  <Clock size={14} />
-                  <span>{isRtl ? 'وقت المشي المقدر: ' : 'Estimated walk time: '} {terminalInfo?.walkTime || 5} {isRtl ? 'دقائق' : 'minutes'}</span>
-                </span>
-              </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-main)', marginTop: '2px', lineHeight: '1.5' }}>{t('map.gateDesc')}</p>
-
-              {/* Visual Path Way points */}
+          {selectedGate && (() => {
+            const gateInfo = getGateInfo(activeTerminal, selectedGate);
+            return (
               <div style={{
-                marginTop: '10px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                paddingTop: '12px'
+                marginTop: '25px',
+                padding: '18px',
+                background: 'rgba(14, 165, 233, 0.15)',
+                border: '1px solid var(--primary)',
+                borderRadius: '8px',
+                width: '100%',
+                textAlign: isRtl ? 'right' : 'left',
+                animation: 'fadeInUp 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
               }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                  {isRtl ? 'مسار الوصول الموصى به للبوابة:' : 'Recommended walking route:'}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '12px', fontWeight: '700' }}>
-                  <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'الفحص الأول' : 'Initial Check'}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>←</span>
-                  <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'الجوازات' : 'Passport Desk'}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>←</span>
-                  <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'السوق الحرة' : 'Duty Free Area'}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>←</span>
-                  <span style={{ color: 'var(--primary)', textDecoration: 'underline' }}>{isRtl ? `بوابة ${selectedGate}` : `Gate ${selectedGate}`}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ color: 'var(--text-heading)', fontSize: '15px' }}>
+                    {t('map.selectedGate')}: {selectedGate}
+                  </strong>
+
+                  {/* Walk Time details */}
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    color: 'var(--accent)',
+                    fontWeight: 'bold',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    padding: '4px 10px',
+                    borderRadius: '15px'
+                  }}>
+                    <Clock size={14} />
+                    <span>{isRtl ? 'وقت المشي: ' : 'Walk time: '} {gateInfo?.walkTime || terminalInfo?.walkTime || 5} {isRtl ? 'دقائق' : 'min'}</span>
+                  </span>
+                </div>
+
+                {/* Distance */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <span>{isRtl ? 'المسافة: ' : 'Distance: '}</span>
+                  <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{gateInfo?.distance || 'N/A'}</span>
+                </div>
+
+                {/* Services */}
+                {gateInfo?.services && gateInfo.services.length > 0 && (
+                  <div style={{ marginTop: '5px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                      {isRtl ? 'الخدمات المتاحة:' : 'Available Services:'}
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {gateInfo.services.map((service, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            fontSize: '11px',
+                            background: 'rgba(14, 165, 233, 0.2)',
+                            color: 'var(--primary)',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {isRtl ? getServiceNameAr(service) : getServiceNameEn(service)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Path Way points */}
+                <div style={{
+                  marginTop: '10px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingTop: '12px'
+                }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+                    {isRtl ? 'مسار الوصول الموصى به للبوابة:' : 'Recommended walking route:'}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '12px', fontWeight: '700' }}>
+                    <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'الفحص الأول' : 'Initial Check'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>←</span>
+                    <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'الجوازات' : 'Passport Desk'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>←</span>
+                    <span style={{ color: 'var(--text-main)' }}>{isRtl ? 'السوق الحرة' : 'Duty Free Area'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>←</span>
+                    <span style={{ color: 'var(--primary)', textDecoration: 'underline' }}>{isRtl ? `بوابة ${selectedGate}` : `Gate ${selectedGate}`}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Step-by-Step Travel Guide */}

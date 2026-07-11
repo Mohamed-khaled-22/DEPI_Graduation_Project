@@ -36,14 +36,32 @@ const AIRPORT_GATES = {
     t1: {
       nameAr: 'الصالة 1 - مغادرة دولية',
       nameEn: 'Terminal 1 - International Departures',
-      gates: ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'],
-      walkTime: 4 // minutes
+      gates: [
+        { id: 'A1', walkTime: 3, services: ['duty-free', 'lounge'], distance: '150m' },
+        { id: 'A2', walkTime: 4, services: ['cafe', 'restroom'], distance: '200m' },
+        { id: 'A3', walkTime: 5, services: ['duty-free', 'lounge', 'spa'], distance: '250m' },
+        { id: 'A4', walkTime: 4, services: ['restaurant', 'prayer-room'], distance: '180m' },
+        { id: 'A5', walkTime: 6, services: ['duty-free', 'kids-zone'], distance: '300m' },
+        { id: 'A6', walkTime: 5, services: ['cafe', 'lounge'], distance: '220m' },
+        { id: 'A7', walkTime: 4, services: ['restroom', 'charging-station'], distance: '160m' },
+        { id: 'A8', walkTime: 7, services: ['duty-free', 'restaurant', 'lounge'], distance: '350m' }
+      ],
+      walkTime: 4 // minutes average
     },
     t2: {
       nameAr: 'الصالة 2 - مغادرة محلية',
       nameEn: 'Terminal 2 - Domestic Departures',
-      gates: ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8'],
-      walkTime: 6 // minutes
+      gates: [
+        { id: 'B1', walkTime: 4, services: ['cafe', 'restroom'], distance: '120m' },
+        { id: 'B2', walkTime: 5, services: ['restaurant', 'prayer-room'], distance: '180m' },
+        { id: 'B3', walkTime: 3, services: ['vending-machine'], distance: '100m' },
+        { id: 'B4', walkTime: 6, services: ['cafe', 'lounge'], distance: '250m' },
+        { id: 'B5', walkTime: 4, services: ['restroom', 'charging-station'], distance: '140m' },
+        { id: 'B6', walkTime: 5, services: ['restaurant'], distance: '200m' },
+        { id: 'B7', walkTime: 7, services: ['cafe', 'kids-zone'], distance: '280m' },
+        { id: 'B8', walkTime: 6, services: ['lounge', 'prayer-room'], distance: '260m' }
+      ],
+      walkTime: 6 // minutes average
     }
   },
   // Flight to gate mapping
@@ -108,7 +126,11 @@ export function BookingProvider({ children }) {
 
   // Gate management functions
   const getTerminalGates = (terminal) => {
-    return AIRPORT_GATES.terminals[terminal]?.gates || [];
+    return AIRPORT_GATES.terminals[terminal]?.gates?.map(g => g.id) || [];
+  };
+
+  const getGateInfo = (terminal, gateId) => {
+    return AIRPORT_GATES.terminals[terminal]?.gates?.find(g => g.id === gateId) || null;
   };
 
   const getTerminalInfo = (terminal) => {
@@ -122,17 +144,18 @@ export function BookingProvider({ children }) {
   };
 
   return (
-    <BookingContext.Provider value={{ 
-      bookings, 
-      createBooking, 
-      getUserBookings, 
-      getBookingById, 
-      updateBooking, 
-      deleteBooking, 
-      calculateFlightPrice,
+    <BookingContext.Provider value={{
+      bookings,
+      createBooking,
+      getUserBookings,
+      getBookingById,
+      updateBooking,
+      deleteBooking,
       getTerminalGates,
+      getGateInfo,
       getTerminalInfo,
-      findGateByFlight
+      findGateByFlight,
+      calculateFlightPrice
     }}>
       {children}
     </BookingContext.Provider>

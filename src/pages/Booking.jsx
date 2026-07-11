@@ -46,7 +46,8 @@ export default function Booking() {
     returnDate: '',
     passengers: 1,
     baggageCount: 0,
-    cabinClass: 'economy'
+    cabinClass: 'economy',
+    seat: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -54,6 +55,25 @@ export default function Booking() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
   const [showConflictPopup, setShowConflictPopup] = useState(false);
+
+  // Generate occupied seats for the selected route
+  const [occupiedSeats, setOccupiedSeats] = useState(() => {
+    const storedOccupiedSeats = localStorage.getItem('occupied_seats');
+    if (storedOccupiedSeats) {
+      try {
+        return JSON.parse(storedOccupiedSeats);
+      } catch (e) {
+        console.error('Failed to parse occupied seats from localStorage', e);
+      }
+    }
+    return {};
+  });
+
+  // Get occupied seats for current route
+  const getRouteOccupiedSeats = () => {
+    const routeKey = `${formData.from}-${formData.to}-${formData.departureDate}`;
+    return occupiedSeats[routeKey] || [];
+  };
 
   // Calculate estimated price for display
   const estimatedPrice = formData.to ? calculateFlightPrice(formData.cabinClass, formData.baggageCount, formData.from, formData.to, formData.passengers) : 0;
@@ -83,7 +103,7 @@ export default function Booking() {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.fullName.trim()) {
       newErrors.fullName = isRtl ? 'الاسم الكامل مطلوب' : 'Full name is required';
     }
@@ -106,6 +126,9 @@ export default function Booking() {
     }
     if (formData.passengers < 1 || formData.passengers > 9) {
       newErrors.passengers = isRtl ? 'عدد المسافرين يجب أن يكون بين 1 و 9' : 'Passengers must be between 1 and 9';
+    }
+    if (!formData.seat) {
+      newErrors.seat = isRtl ? 'يرجى اختيار مقعد' : 'Please select a seat';
     }
 
     setErrors(newErrors);
@@ -154,9 +177,17 @@ export default function Booking() {
 
       const flightNo = `QA-${Math.floor(Math.random() * 900) + 100}`;
       const gate = ['A12', 'B15', 'C08', 'D22', 'E05'][Math.floor(Math.random() * 5)];
-      const seat = `${Math.floor(Math.random() * 30) + 1}${['A', 'B', 'C', 'D', 'E', 'F'][Math.floor(Math.random() * 6)]}`;
       const departureTime = `${Math.floor(Math.random() * 12) + 6}:${Math.random() > 0.5 ? '30' : '00'}`;
       const arrivalTime = `${parseInt(departureTime.split(':')[0]) + Math.floor(Math.random() * 4) + 2}:${departureTime.split(':')[1]}`;
+
+      // Save selected seat to occupied seats
+      const routeKey = `${formData.from}-${formData.to}-${formData.departureDate}`;
+      const updatedOccupiedSeats = {
+        ...occupiedSeats,
+        [routeKey]: [...(occupiedSeats[routeKey] || []), formData.seat]
+      };
+      localStorage.setItem('occupied_seats', JSON.stringify(updatedOccupiedSeats));
+      setOccupiedSeats(updatedOccupiedSeats);
 
       const bookingData = {
         userEmail: formData.email,
@@ -173,7 +204,7 @@ export default function Booking() {
         departureTime,
         arrivalTime,
         gate,
-        seat,
+        seat: formData.seat,
         passengers: formData.passengers,
         baggageCount: formData.baggageCount,
         cabinClass: formData.cabinClass,
@@ -287,7 +318,8 @@ export default function Booking() {
                   returnDate: '',
                   passengers: 1,
                   baggageCount: 0,
-                  cabinClass: 'economy'
+                  cabinClass: 'economy',
+                  seat: ''
                 });
               }}
               style={{ justifyContent: 'center' }}
@@ -531,6 +563,92 @@ export default function Booking() {
               </div>
             </div>
           </div>
+
+          {/* Seat Selection */}
+          {formData.to && (
+            <div style={{ marginBottom: '30px' }}>
+              <h3 style={{ fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-heading)' }}>
+                <User size={20} style={{ color: 'var(--primary)' }} />
+                {isRtl ? 'اختيار المقعد' : 'Seat Selection'}
+              </h3>
+
+              <div style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                padding: '20px'
+              }}>
+                <div style={{ marginBottom: '15px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  {isRtl ? 'المقعد المختار:' : 'Selected Seat:'}{' '}
+                  <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '16px' }}>
+                    {formData.seat || (isRtl ? 'لم يتم الاختيار' : 'Not selected')}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px', maxWidth: '400px', margin: '0 auto' }}>
+                  {Array.from({ length: 30 }, (_, i) => {
+                    const row = Math.floor(i / 6) + 1;
+                    const col = ['A', 'B', 'C', 'D', 'E', 'F'][i % 6];
+                    const seatId = `${row}${col}`;
+                    const isOccupied = getRouteOccupiedSeats().includes(seatId);
+                    const isSelected = formData.seat === seatId;
+
+                    return (
+                      <button
+                        key={seatId}
+                        type="button"
+                        onClick={() => !isOccupied && setFormData(prev => ({ ...prev, seat: seatId }))}
+                        disabled={isOccupied}
+                        style={{
+                          padding: '10px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border-color)',
+                          background: isSelected
+                            ? 'var(--primary)'
+                            : isOccupied
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : 'var(--bg-input)',
+                          color: isSelected
+                            ? '#fff'
+                            : isOccupied
+                            ? 'rgba(255, 255, 255, 0.3)'
+                            : 'var(--text-main)',
+                          cursor: isOccupied ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          fontFamily: 'Inter',
+                          transition: 'var(--transition)'
+                        }}
+                      >
+                        {seatId}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '15px', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }} />
+                    <span style={{ color: 'var(--text-muted)' }}>{isRtl ? 'متاح' : 'Available'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'var(--primary)' }} />
+                    <span style={{ color: 'var(--text-muted)' }}>{isRtl ? 'مختار' : 'Selected'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }} />
+                    <span style={{ color: 'var(--text-muted)' }}>{isRtl ? 'مشغول' : 'Occupied'}</span>
+                  </div>
+                </div>
+
+                {errors.seat && (
+                  <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '8px', display: 'block', textAlign: 'center' }}>
+                    {errors.seat}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Price Summary */}
           {formData.to && (
